@@ -31,6 +31,25 @@ import "net/http"
 for _, s := range sitemaps {
     http.Handle(s.Path, s)
 }
+
+http.ListenAndServe(":8080", nil)
+```
+
+Visit http://localhost:8080/sitemap.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>http://localhost:8080/home</loc>
+    </url>
+    <url>
+        <loc>http://localhost:8080/articles</loc>
+        <lastmod>2019-12-05T08:17:35+02:00</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1</priority>
+    </url>
+</urlset>
 ```
 
 For a more detailed technical documentation you can head over to our [godocs](https://godoc.org/github.com/kataras/sitemap). And for executable code you can always visit the [_examples](_examples) repository's subdirectory.

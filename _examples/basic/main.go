@@ -15,12 +15,12 @@ func main() {
 	})
 
 	sitemaps := sitemap.New("http://localhost:8080").
-		URL(sitemap.URL{Loc: "/home"}).
+		URL(sitemap.URL{Loc: "/home", Links: []sitemap.Link{{Hreflang: "el-GR", Href: "/el-GR/home"}}}).
 		URL(sitemap.URL{Loc: "/articles", LastMod: time.Now(), ChangeFreq: sitemap.Daily, Priority: 1}).
 		URL(sitemap.URL{Loc: "/about"}).
 		URL(sitemap.URL{Loc: "/rss", ChangeFreq: sitemap.Always}).
 		Build()
-
+		//
 	for _, s := range sitemaps {
 		fmt.Printf("Pos: %d\nPath: %s\nIsSitemapIndex: %v\n",
 			s.Pos, s.Path, s.IsSitemapIndex)

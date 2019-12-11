@@ -16,6 +16,17 @@ import (
 // Defaults to 50000 as Sitemap Protocol specifies.
 var MaxURLsPerSitemap = 50000
 
+// URL.ChangeFreq valid values.
+const (
+	Always  = "always"
+	Hourly  = "hourly"
+	Daily   = "daily"
+	Weekly  = "weekly"
+	Monthly = "monthly"
+	Yearly  = "yearly"
+	Never   = "never"
+)
+
 // URL is the parent tag for each URL entry.
 type URL struct {
 	// Loc is required. It defines the URL of the page.
@@ -43,26 +54,38 @@ type URL struct {
 	ChangeFreq string `xml:"changefreq,omitempty"`
 	// Priority is optional. It defines the priority of this URL relative to other URLs on your site.
 	// Valid values range from 0.0 to 1.0.
+	//
+	// The default priority of a page is 0.5.
 	Priority float32 `xml:"priority,omitempty"`
+
+	Links []Link `xml:"xhtml:link,allowempty,omitempty"`
 }
 
-// URL.ChangeFreq valid values.
+// AddLink adds a link to this URL.
+func (u *URL) AddLink(link Link) {
+	u.Links = append(u.Links, link)
+}
+
+// Link is the optional child element of a URL.
+// It can be used to list every alternate version of the page.
+//
+// Read more at: https://support.google.com/webmasters/answer/189077?hl=en.
+type Link struct {
+	Rel      string `xml:"rel,attr"`
+	Hreflang string `xml:"hreflang,attr"`
+	Href     string `xml:"href,attr"`
+}
+
 const (
-	Always  = "always"
-	Hourly  = "hourly"
-	Daily   = "daily"
-	Weekly  = "weekly"
-	Monthly = "monthly"
-	Yearly  = "yearly"
-	Never   = "never"
+	xmlSchemaURL  = "http://www.sitemaps.org/schemas/sitemap/0.9"
+	xmlnsXhtmlURL = "http://www.w3.org/1999/xhtml"
+	xmlTimeFormat = "2006-01-02T15:04:05-07:00" // W3C Datetime.
 )
 
-const xmlSchemaURL = "http://www.sitemaps.org/schemas/sitemap/0.9"
-const xmlTimeFormat = "2006-01-02T15:04:05-07:00" // W3C Datetime.
-
 type sitemap struct {
-	XMLName xml.Name `xml:"urlset"`
-	Xmlns   string   `xml:"xmlns,attr"`
+	XMLName    xml.Name `xml:"urlset"`
+	Xmlns      string   `xml:"xmlns,attr"`
+	XmlnsXhtml string   `xml:"xmlns:xhtml,attr,omitempty"`
 
 	URLs []URL `xml:"url"`
 }
@@ -81,8 +104,9 @@ func (s *sitemap) Add(url URL) {
 }
 
 type sitemapIndex struct {
-	XMLName xml.Name `xml:"sitemapindex"`
-	Xmlns   string   `xml:"xmlns,attr"`
+	XMLName    xml.Name `xml:"sitemapindex"`
+	Xmlns      string   `xml:"xmlns,attr"`
+	XmlnsXhtml string   `xml:"xmlns:xhtml,attr,omitempty"`
 
 	URLs []URL `xml:"sitemap"`
 }
@@ -97,8 +121,12 @@ type Builder struct {
 	currentIndex int
 	sitemaps     []*sitemap
 
+	defaultLang  string
 	errorHandler func(err error) (handled bool)
 }
+
+// DefaultLang is the default "hreflang" attribute of a self-included Link child element of URL.
+const DefaultLang = "en"
 
 // New returns a new sitemaps Builder.
 // Use its `Add` to add one or more urls and `Build` once.
@@ -107,6 +135,7 @@ func New(startURL string) *Builder {
 		startURL:     withScheme(startURL),
 		currentIndex: 0,
 		sitemaps:     []*sitemap{newSitemap()},
+		defaultLang:  DefaultLang,
 		errorHandler: func(err error) bool {
 			log.Fatal(err)
 			return false
@@ -115,7 +144,7 @@ func New(startURL string) *Builder {
 }
 
 // ErrorHandler sets the error handler.
-func (b *Builder) ErrorHandler(fn func(err error) (handled bool)) {
+func (b *Builder) ErrorHandler(fn func(err error) (handled bool)) *Builder {
 	if fn == nil {
 		fn = func(error) bool {
 			return true
@@ -123,7 +152,17 @@ func (b *Builder) ErrorHandler(fn func(err error) (handled bool)) {
 	}
 
 	b.errorHandler = fn
+
+	return b
 }
+
+// DefaultLang sets the default "hreflang" attribute of a self-included URL Link.
+func (b *Builder) DefaultLang(langCode string) *Builder {
+	b.defaultLang = langCode
+	return b
+}
+
+const alternateLinkAttrName = "alternate"
 
 // URL adds a location of a Sitemap file determines the set of URLs that can be included in that Sitemap.
 func (b *Builder) URL(sitemapURLs ...URL) *Builder {
@@ -142,6 +181,37 @@ func (b *Builder) URL(sitemapURLs ...URL) *Builder {
 			b.currentIndex++
 			b.sitemaps = append(b.sitemaps, sm)
 		}
+
+		if len(sitemapURL.Links) > 0 {
+			sm.XmlnsXhtml = xmlnsXhtmlURL
+
+			hasItself := false
+			for idx, link := range sitemapURL.Links {
+				link.Href = concat(b.startURL, link.Href)
+				if link.Rel == "" && link.Hreflang != "" {
+					link.Rel = alternateLinkAttrName
+				}
+
+				if !hasItself {
+					// Check if the user provided the translated link to that URL itself.
+					// the links, if not empty, should provide the URL loc itself.
+					if link.Rel == alternateLinkAttrName && link.Href == sitemapURL.Loc {
+						hasItself = true
+					}
+				}
+
+				sitemapURL.Links[idx] = link
+			}
+
+			if !hasItself && b.defaultLang != "" {
+				sitemapURL.AddLink(Link{
+					Rel:      alternateLinkAttrName,
+					Hreflang: b.defaultLang,
+					Href:     sitemapURL.Loc,
+				})
+			}
+		}
+
 		sm.Add(sitemapURL)
 	}
 
@@ -262,7 +332,7 @@ func withScheme(s string) string {
 func concat(startURL, loc string) string {
 	if loc[0] == '/' {
 		return startURL + loc
-	} else {
-		return startURL + "/" + loc
 	}
+
+	return startURL + "/" + loc
 }

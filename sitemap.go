@@ -195,7 +195,7 @@ func (b *Builder) URL(sitemapURLs ...URL) *Builder {
 				if !hasItself {
 					// Check if the user provided the translated link to that URL itself.
 					// the links, if not empty, should provide the URL loc itself.
-					if link.Rel == alternateLinkAttrName && link.Href == sitemapURL.Loc {
+					if link.Rel == alternateLinkAttrName && link.Hreflang == b.defaultLang {
 						hasItself = true
 					}
 				}

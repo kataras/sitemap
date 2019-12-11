@@ -15,7 +15,7 @@ func main() {
 	})
 
 	sitemaps := sitemap.New("http://localhost:8080").
-		URL(sitemap.URL{Loc: "/home", Links: []sitemap.Link{{Hreflang: "el-GR", Href: "/el-GR/home"}}}).
+		URL(sitemap.URL{Loc: "/home", Links: []sitemap.Link{{Hreflang: "el", Href: "/el/home"}}}).
 		URL(sitemap.URL{Loc: "/articles", LastMod: time.Now(), ChangeFreq: sitemap.Daily, Priority: 1}).
 		URL(sitemap.URL{Loc: "/about"}).
 		URL(sitemap.URL{Loc: "/rss", ChangeFreq: sitemap.Always}).

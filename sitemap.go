@@ -58,7 +58,7 @@ type URL struct {
 	// The default priority of a page is 0.5.
 	Priority float32 `xml:"priority,omitempty"`
 
-	Links []Link `xml:"xhtml:link,allowempty,omitempty"`
+	Links []Link `xml:"xhtml:link,omitempty"`
 }
 
 // AddLink adds a link to this URL.

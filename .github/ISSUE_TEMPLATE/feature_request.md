@@ -1,8 +1,8 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an idea for httpfs
 title: "[FEATURE REQUEST]"
-labels: type:idea
+labels: enhancement
 assignees: kataras
 
 ---

@@ -1,6 +1,6 @@
 # Sitemap (Go)
 
-[![build status](https://img.shields.io/github/workflow/status/kataras/sitemap/CI/master?style=for-the-badge)](https://github.com/kataras/sitemap/actions) [![report card](https://img.shields.io/badge/report%20card-a%2B-ff3333.svg?style=for-the-badge)](https://goreportcard.com/report/github.com/kataras/sitemap) [![godocs](https://img.shields.io/badge/go-%20docs-488AC7.svg?style=for-the-badge)](https://pkg.go.dev/github.com/kataras/sitemap)
+[![build status](https://img.shields.io/github/actions/workflow/status/kataras/sitemap/ci.yml?style=for-the-badge)](https://github.com/kataras/sitemap/actions) [![report card](https://img.shields.io/badge/report%20card-a%2B-ff3333.svg?style=for-the-badge)](https://goreportcard.com/report/github.com/kataras/sitemap) [![godocs](https://img.shields.io/badge/go-%20docs-488AC7.svg?style=for-the-badge)](https://pkg.go.dev/github.com/kataras/sitemap)
 
 [Sitemap Protocol](https://www.sitemaps.org/protocol.html) implementation for Go. Automatically handles [Sitemap index files](https://www.sitemaps.org/protocol.html#index) `"/sitemap.xml"`.
 
